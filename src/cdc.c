@@ -45,4 +45,5 @@ int main(int argc, char **argv)
             print_program_version(PROGRAM_NAME, CDC_DATE, CDC_VERSION, CDC_AUTHORS, CDC_LICENSE);
         }
 
+    free_options_t(opt);
 }

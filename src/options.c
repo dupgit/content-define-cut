@@ -65,6 +65,8 @@ options_t *manage_command_line_options(int argc, char **argv)
     opt->file_list = NULL;
     opt->file_list = convert_gchar_array_to_GSList(dirname_array, opt->file_list);
 
+    g_strfreev(dirname_array);
+
     return opt;
 }
 
@@ -77,6 +79,7 @@ void free_options_t(options_t *opt)
 {
     if (opt != NULL)
         {
+            free_list(opt->file_list);
             g_free(opt);
         }
 }
