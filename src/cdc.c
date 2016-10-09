@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /*
- *    cut.c
+ *    cdc.c
  *    This file is part of content-define-cut (cdc) project.
  *
  *    (C) Copyright 2016 Olivier Delhomme
@@ -17,14 +17,15 @@
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with "Sauvegarde".  If not, see <http://www.gnu.org/licenses/>
+ *    along with cdc project.  If not, see <http://www.gnu.org/licenses/>
  */
 
 /**
- * @file cut.c
+ * @file cdc.c
  */
 
-#include "cut.h"
+#include "cdc.h"
+
 
 /**
  * Main function
@@ -34,5 +35,14 @@
  */
 int main(int argc, char **argv)
 {
+    options_t *opt = NULL;    /** Structure to manage program's options */
+
+
+    opt = manage_command_line_options(argc, argv);
+
+    if (opt->version == TRUE)
+        {
+            print_program_version(PROGRAM_NAME, CDC_DATE, CDC_VERSION, CDC_AUTHORS, CDC_LICENSE);
+        }
 
 }

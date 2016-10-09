@@ -1,1 +1,5 @@
 TAGS
+po/Makefile.in.in
+po/POTFILES.in
+po/cdc.po.old
+
