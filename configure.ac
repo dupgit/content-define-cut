@@ -5,7 +5,7 @@ AM_INIT_AUTOMAKE
 
 AC_PROG_CC
 AC_CONFIG_MACRO_DIR([m4])
-AC_PROG_INTLTOOL([0.23])
+dnl AC_PROG_INTLTOOL([0.23])
 
 
 dnl ***********************************************************************
