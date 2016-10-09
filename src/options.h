@@ -38,6 +38,7 @@
 typedef struct
 {
     gboolean version;     /**< TRUE if we have to display program's version */
+    GSList *file_list;    /**< list of files */
 } options_t;
 
 

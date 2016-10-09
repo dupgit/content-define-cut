@@ -62,6 +62,8 @@ options_t *manage_command_line_options(int argc, char **argv)
     opt = (options_t *) g_malloc0(sizeof(options_t));
 
     opt->version = version; /* only TRUE if -v or --version was invoked */
+    opt->file_list = NULL;
+    opt->file_list = convert_gchar_array_to_GSList(dirname_array, opt->file_list);
 
     return opt;
 }
