@@ -27,6 +27,101 @@
 #include "cdc.h"
 
 
+void calculate_hashs_for_buffer_no_update(gchar *buffer, guint read, size_t len)
+{
+    size_t pos = 0;
+    uint32_t res = 0;
+    Rollsum sum;
+
+
+    while (pos <= (read - len))
+        {
+            RollsumInit(&sum);
+            RollsumUpdate(&sum, buffer + pos, len);
+            res = RollsumDigest(&sum);
+            fprintf(stdout, "%jx\n", res);
+            pos = pos + 1;
+        }
+}
+
+
+
+void calculate_hashs_for_buffer(Rollsum *sum, gchar *buffer, guint read, size_t len)
+{
+    size_t pos = 0;
+    uint32_t res = 0;
+
+
+    while (pos <= (read - len))
+        {
+            RollsumRotate(sum, buffer[pos], buffer[pos+len+1]);
+            res = RollsumDigest(sum);
+            fprintf(stdout, "%jx\n", res);
+            pos = pos + 1;
+        }
+}
+
+
+
+static void operate_one_file(gchar *filename)
+{
+    GFileInputStream *stream = NULL;
+    GError *error = NULL;
+    guint read = 0;
+    gchar *buffer = NULL;
+    gchar *buffer2 = NULL;
+    guint blocksize = 16384;
+    GFile *a_file = NULL;
+    size_t len = 16;
+    uint32_t res = 0;
+    Rollsum sum;
+
+
+    fprintf(stderr, _("File : %s\n"), filename);
+    a_file = g_file_new_for_path(filename);
+    stream = g_file_read(a_file, NULL, &error);
+
+    buffer = (guchar *) g_malloc(blocksize);
+    buffer2 = (guchar *) g_malloc(blocksize);
+    read = g_input_stream_read((GInputStream *) stream, buffer, blocksize, NULL, &error);
+
+    if (read > len)
+        {
+            RollsumInit(&sum);
+            RollsumUpdate(&sum, buffer, len);
+
+            calculate_hashs_for_buffer(&sum, buffer, read, len);
+
+            while (read != 0 && error == NULL)
+                {
+                    read = g_input_stream_read((GInputStream *) stream, buffer2, blocksize, NULL, &error);
+                    if (read > 0)
+                        {
+                            /* Il faut gérer l'entre deux buffers */
+
+                            calculate_hashs_for_buffer(&sum, buffer, read, len);
+                        }
+                }
+
+        }
+
+    g_input_stream_close((GInputStream *) stream, NULL, NULL);
+    g_object_unref(stream);
+    g_object_unref(a_file);
+}
+
+
+static void do_calculations_file_list(GSList *file_list)
+{
+
+    while (file_list != NULL)
+        {
+            operate_one_file(file_list->data);
+            file_list = g_slist_next(file_list);
+        }
+}
+
+
 /**
  * Main function
  * @param argc : number of arguments given on the command line.
@@ -43,6 +138,10 @@ int main(int argc, char **argv)
     if (opt->version == TRUE)
         {
             print_program_version(PROGRAM_NAME, CDC_DATE, CDC_VERSION, CDC_AUTHORS, CDC_LICENSE);
+        }
+    else
+        {
+            do_calculations_file_list(opt->file_list);
         }
 
     free_options_t(opt);

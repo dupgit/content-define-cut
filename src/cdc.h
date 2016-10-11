@@ -38,7 +38,7 @@
 #include <libcdpfgl.h>
 
 #include "options.h"
-
+#include "rollsum.h"
 
 /**
  * @def CDC_DATE
