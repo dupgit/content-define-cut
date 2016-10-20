@@ -85,8 +85,11 @@ static void operate_adler_on_one_file(gchar *filename, gboolean adler_update)
     GFileInputStream *stream = NULL;
     GError *error = NULL;
     guint read = 0;
+    guint first_read = 0;
     gchar *buffer = NULL;
     gchar *buffer2 = NULL;
+    gchar *buffer3 = NULL;
+    gchar *buffer4 = NULL;
     guint blocksize = 16384;
     GFile *a_file = NULL;
     size_t len = 16;
@@ -100,40 +103,56 @@ static void operate_adler_on_one_file(gchar *filename, gboolean adler_update)
 
     buffer = (guchar *) g_malloc(blocksize);
     buffer2 = (guchar *) g_malloc(blocksize);
-    read = g_input_stream_read((GInputStream *) stream, buffer, blocksize, NULL, &error);
+    buffer3 = (guchar *) g_malloc(2*len);
 
-    if (read > len)
+    first_read = g_input_stream_read((GInputStream *) stream, buffer, blocksize, NULL, &error);
+
+    if (first_read > len)
         {
             if (adler_update == TRUE)
                 {
                     RollsumInit(&sum);
                     RollsumUpdate(&sum, buffer, len);
-                    calculate_hashs_for_buffer(&sum, buffer, read, len);
+                    calculate_hashs_for_buffer(&sum, buffer, first_read, len);
                 }
             else
                 {
-                    calculate_hashs_for_buffer_no_update(buffer, read, len);
+                    calculate_hashs_for_buffer_no_update(buffer, first_read, len);
                 }
 
-            while (read != 0 && error == NULL)
+            while (first_read != 0 && error == NULL)
                 {
                     read = g_input_stream_read((GInputStream *) stream, buffer2, blocksize, NULL, &error);
+
                     if (read > 0)
                         {
+                            /* We need to manage between buffers with the update operation */
+                            memcpy(buffer3, buffer + first_read - len + 1, len - 1);
+                            memcpy(buffer3 + len - 1, buffer2, len - 1);
+
                             if (adler_update == TRUE)
                                 {
-                                    /* We need to manage between buffers with the update operation */
-                                    calculate_hashs_for_buffer(&sum, buffer, read, len);
+                                    calculate_hashs_for_buffer(&sum, buffer3, 2 * len - 2, len);
+                                    calculate_hashs_for_buffer(&sum, buffer2, read, len);
                                 }
                             else
                                 {
-                                    calculate_hashs_for_buffer_no_update(buffer, read, len);
+                                    calculate_hashs_for_buffer_no_update(buffer3, 2 * len - 2, len);
+                                    calculate_hashs_for_buffer_no_update(buffer2, read, len);
                                 }
+
+                            buffer4 = buffer2;
+                            buffer2 = buffer;
+                            buffer = buffer4;
                         }
+                    first_read = read;
                 }
 
         }
 
+    g_free(buffer);
+    g_free(buffer2);
+    g_free(buffer3);
     g_input_stream_close((GInputStream *) stream, NULL, NULL);
     g_object_unref(stream);
     g_object_unref(a_file);
