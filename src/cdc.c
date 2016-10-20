@@ -52,6 +52,7 @@ void calculate_hashs_for_buffer_no_update(gchar *buffer, guint read, size_t len)
 
 /**
  * Calculates hash by updating it with RollsumRotate at each byte
+ * @param sum is the structure to update to calculate hashs
  * @param buffer is a gchar * string containing a portion of the file
  * @param read is the number of bytes read that are in buffer
  * @param len is the window size len on which the hash is calculated
@@ -75,8 +76,11 @@ void calculate_hashs_for_buffer(Rollsum *sum, gchar *buffer, guint read, size_t 
 /**
  * Calculate a modified adler hash on one file
  * @param is the filename of the file to be processed
+ * @param adler_update selects the updating version of librsync
+ *        adler's algorithm when TRUE and the static version (that
+ *        is expected to be much slower) if FALSE.
  */
-static void operate_adler_on_one_file(gchar *filename)
+static void operate_adler_on_one_file(gchar *filename, gboolean adler_update)
 {
     GFileInputStream *stream = NULL;
     GError *error = NULL;
@@ -100,18 +104,31 @@ static void operate_adler_on_one_file(gchar *filename)
 
     if (read > len)
         {
-            RollsumInit(&sum);
-            RollsumUpdate(&sum, buffer, len);
-
-            calculate_hashs_for_buffer(&sum, buffer, read, len);
+            if (adler_update == TRUE)
+                {
+                    RollsumInit(&sum);
+                    RollsumUpdate(&sum, buffer, len);
+                    calculate_hashs_for_buffer(&sum, buffer, read, len);
+                }
+            else
+                {
+                    calculate_hashs_for_buffer_no_update(buffer, read, len);
+                }
 
             while (read != 0 && error == NULL)
                 {
                     read = g_input_stream_read((GInputStream *) stream, buffer2, blocksize, NULL, &error);
                     if (read > 0)
                         {
-                            /* We need to manage between buffers with the update operation */
-                            calculate_hashs_for_buffer(&sum, buffer, read, len);
+                            if (adler_update == TRUE)
+                                {
+                                    /* We need to manage between buffers with the update operation */
+                                    calculate_hashs_for_buffer(&sum, buffer, read, len);
+                                }
+                            else
+                                {
+                                    calculate_hashs_for_buffer_no_update(buffer, read, len);
+                                }
                         }
                 }
 
@@ -125,14 +142,22 @@ static void operate_adler_on_one_file(gchar *filename)
 
 /**
  * Calculate hashs on each file of the list
- * @param file_list is a list of gchar * representing filenames.
+ * @param opt is the options as selected on the command line.
  */
-static void do_calculations_file_list(GSList *file_list)
+static void do_calculations_file_list(options_t *opt)
 {
+    GSList *file_list = NULL;
+    gboolean adler_update = FALSE;
+
+    if (opt != NULL)
+        {
+            file_list = opt->file_list;
+            adler_update = opt->adler_update;
+        }
 
     while (file_list != NULL)
         {
-            operate_adler_on_one_file(file_list->data);
+            operate_adler_on_one_file(file_list->data, adler_update);
             file_list = g_slist_next(file_list);
         }
 }
@@ -157,7 +182,7 @@ int main(int argc, char **argv)
         }
     else
         {
-            do_calculations_file_list(opt->file_list);
+            do_calculations_file_list(opt);
         }
 
     free_options_t(opt);

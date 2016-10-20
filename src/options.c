@@ -43,15 +43,17 @@
  */
 options_t *manage_command_line_options(int argc, char **argv)
 {
-    options_t *opt = NULL;    /** Structure to manage program's options            */
-    gchar *summary = NULL;    /** Abstract for the program                         */
-    gchar **dirname_array = NULL;  /** array of dirnames left on the command line             */
+    options_t *opt = NULL;         /** Structure to manage program's options       */
+    gchar *summary = NULL;         /** Abstract for the program                    */
+    gchar **dirname_array = NULL;  /** array of dirnames left on the command line  */
 
-    gboolean version = FALSE;      /** True if -v was selected on the command line            */
+    gboolean version = FALSE;      /** True if -v was selected on the command line */
+    gboolean adler_update = FALSE; /** True if -u was selected on the command line */
 
     GOptionEntry entries[] =
     {
         { "version", 'v', 0, G_OPTION_ARG_NONE, &version, N_("Prints program version"), NULL },
+        { "adler-update", 'u', 0, G_OPTION_ARG_NONE, &adler_update, N_("Uses an update form of adler algorithm for librsync"), NULL},
         { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &dirname_array, "", NULL},
         { NULL }
     };
@@ -61,7 +63,9 @@ options_t *manage_command_line_options(int argc, char **argv)
 
     opt = (options_t *) g_malloc0(sizeof(options_t));
 
-    opt->version = version; /* only TRUE if -v or --version was invoked */
+    opt->version = version;           /* Only TRUE if -v or --version was invoked         */
+    opt->adler_update = adler_update; /* Only TRUE if -u was selected on the command line */
+
     opt->file_list = NULL;
     opt->file_list = convert_gchar_array_to_GSList(dirname_array, opt->file_list);
 
