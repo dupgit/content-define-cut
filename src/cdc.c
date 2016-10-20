@@ -44,7 +44,7 @@ void calculate_hashs_for_buffer_no_update(gchar *buffer, guint read, size_t len)
             RollsumInit(&sum);
             RollsumUpdate(&sum, buffer + pos, len);
             res = RollsumDigest(&sum);
-            fprintf(stdout, "%jx\n", res);
+            fprintf(stdout, "%08jx\n", res);
             pos = pos + 1;
         }
 }
@@ -67,7 +67,7 @@ void calculate_hashs_for_buffer(Rollsum *sum, gchar *buffer, guint read, size_t 
         {
             RollsumRotate(sum, buffer[pos], buffer[pos+len+1]);
             res = RollsumDigest(sum);
-            fprintf(stdout, "%jx\n", res);
+            fprintf(stdout, "%08jx\n", res);
             pos = pos + 1;
         }
 }
