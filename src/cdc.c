@@ -26,7 +26,12 @@
 
 #include "cdc.h"
 
-
+/**
+ * Calculates hash by recalculating it at each byte
+ * @param buffer is a gchar * string containing a portion of the file
+ * @param read is the number of bytes read that are in buffer
+ * @param len is the window size len on which the hash is calculated
+ */
 void calculate_hashs_for_buffer_no_update(gchar *buffer, guint read, size_t len)
 {
     size_t pos = 0;
@@ -45,7 +50,12 @@ void calculate_hashs_for_buffer_no_update(gchar *buffer, guint read, size_t len)
 }
 
 
-
+/**
+ * Calculates hash by updating it with RollsumRotate at each byte
+ * @param buffer is a gchar * string containing a portion of the file
+ * @param read is the number of bytes read that are in buffer
+ * @param len is the window size len on which the hash is calculated
+ */
 void calculate_hashs_for_buffer(Rollsum *sum, gchar *buffer, guint read, size_t len)
 {
     size_t pos = 0;
@@ -62,8 +72,11 @@ void calculate_hashs_for_buffer(Rollsum *sum, gchar *buffer, guint read, size_t 
 }
 
 
-
-static void operate_one_file(gchar *filename)
+/**
+ * Calculate a modified adler hash on one file
+ * @param is the filename of the file to be processed
+ */
+static void operate_adler_on_one_file(gchar *filename)
 {
     GFileInputStream *stream = NULL;
     GError *error = NULL;
@@ -97,8 +110,7 @@ static void operate_one_file(gchar *filename)
                     read = g_input_stream_read((GInputStream *) stream, buffer2, blocksize, NULL, &error);
                     if (read > 0)
                         {
-                            /* Il faut gérer l'entre deux buffers */
-
+                            /* We need to manage between buffers with the update operation */
                             calculate_hashs_for_buffer(&sum, buffer, read, len);
                         }
                 }
@@ -111,12 +123,16 @@ static void operate_one_file(gchar *filename)
 }
 
 
+/**
+ * Calculate hashs on each file of the list
+ * @param file_list is a list of gchar * representing filenames.
+ */
 static void do_calculations_file_list(GSList *file_list)
 {
 
     while (file_list != NULL)
         {
-            operate_one_file(file_list->data);
+            operate_adler_on_one_file(file_list->data);
             file_list = g_slist_next(file_list);
         }
 }
