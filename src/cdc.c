@@ -172,12 +172,16 @@ static void do_calculations_file_list(options_t *opt)
         {
             file_list = opt->file_list;
             adler_update = opt->adler_update;
-        }
 
-    while (file_list != NULL)
-        {
-            operate_adler_on_one_file(file_list->data, adler_update);
-            file_list = g_slist_next(file_list);
+
+            while (file_list != NULL)
+                {
+                    if (opt->adler == TRUE)
+                        {
+                            operate_adler_on_one_file(file_list->data, adler_update);
+                        }
+                    file_list = g_slist_next(file_list);
+                }
         }
 }
 
