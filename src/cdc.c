@@ -73,6 +73,11 @@ void calculate_hashs_for_buffer(Rollsum *sum, gchar *buffer, guint read, size_t 
 }
 
 
+
+
+
+
+
 /**
  * Calculate a modified adler hash on one file
  * @param is the filename of the file to be processed
@@ -159,6 +164,116 @@ static void operate_adler_on_one_file(gchar *filename, gboolean adler_update)
 }
 
 
+uint32_t init_stupid_hashs(gchar *buffer, guint read, size_t len)
+{
+    guint i = 0;
+    uint32_t res = 0;
+
+    while (i < read && i < len)
+    {
+        res = res + buffer[i];
+        i++;
+    }
+
+    return res;
+}
+
+
+/**
+ * Calculates hash by recalculating it at each byte
+ * @param buffer is a gchar * string containing a portion of the file
+ * @param read is the number of bytes read that are in buffer
+ * @param len is the window size len on which the hash is calculated
+ */
+uint32_t calculate_stupid_hashs(uint32_t res, gchar *buffer, guint read, size_t len)
+{
+    size_t pos = 0;
+    uint32_t inter = 0;
+    guint i = 0;
+
+    while (pos <= (read - len))
+        {
+            res = res - buffer[pos] + buffer[pos + len + 1];
+
+            fprintf(stdout, "%08jx\n", res);
+            pos = pos + 1;
+        }
+
+    return res;
+
+}
+
+
+/**
+ * Operates calculations of a stupid algorithm on one file
+ * @param filename is the filename on which operate the algorithm
+ */
+static void operate_stupid_on_one_file(gchar *filename)
+{
+    GFileInputStream *stream = NULL;
+    GError *error = NULL;
+    GFile *a_file = NULL;
+    guint read = 0;
+    guint first_read = 0;
+    gchar *buffer = NULL;
+    gchar *buffer2 = NULL;
+    gchar *buffer3 = NULL;
+    gchar *buffer4 = NULL;
+    guint blocksize = 16384;
+    size_t len = 16;
+    uint32_t res = 0;
+
+
+    fprintf(stderr, _("File : %s\n"), filename);
+    a_file = g_file_new_for_path(filename);
+    stream = g_file_read(a_file, NULL, &error);
+
+    buffer = (guchar *) g_malloc(blocksize);
+    buffer2 = (guchar *) g_malloc(blocksize);
+    buffer3 = (guchar *) g_malloc(2*len);
+
+    first_read = g_input_stream_read((GInputStream *) stream, buffer, blocksize, NULL, &error);
+
+    res = init_stupid_hashs(buffer, first_read, len);
+
+    if (first_read > len)
+        {
+            res = calculate_stupid_hashs(res, buffer, first_read, len);
+
+            while (first_read != 0 && error == NULL)
+                {
+                    read = g_input_stream_read((GInputStream *) stream, buffer2, blocksize, NULL, &error);
+
+                    if (read > 0)
+                        {
+                            /* We need to manage between buffers with the update operation */
+                            memcpy(buffer3, buffer + first_read - len + 1, len - 1);
+                            memcpy(buffer3 + len - 1, buffer2, len - 1);
+
+                            res = calculate_stupid_hashs(res, buffer3, 2 * (len - 1), len);
+                            res = calculate_stupid_hashs(res, buffer2, read, len);
+
+                            buffer4 = buffer2;
+                            buffer2 = buffer;
+                            buffer = buffer4;
+                        }
+                    first_read = read;
+                }
+
+        }
+
+    g_free(buffer);
+    g_free(buffer2);
+    g_free(buffer3);
+    g_input_stream_close((GInputStream *) stream, NULL, NULL);
+    g_object_unref(stream);
+    g_object_unref(a_file);
+
+}
+
+
+
+
 /**
  * Calculate hashs on each file of the list
  * @param opt is the options as selected on the command line.
@@ -179,6 +294,10 @@ static void do_calculations_file_list(options_t *opt)
                     if (opt->adler == TRUE)
                         {
                             operate_adler_on_one_file(file_list->data, adler_update);
+                        }
+                    else if (opt->stupid == TRUE)
+                        {
+                            operate_stupid_on_one_file(file_list->data);
                         }
                     file_list = g_slist_next(file_list);
                 }

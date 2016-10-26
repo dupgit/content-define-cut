@@ -50,12 +50,15 @@ options_t *manage_command_line_options(int argc, char **argv)
     gboolean version = FALSE;      /** True if -v was selected on the command line */
     gboolean adler_update = FALSE; /** True if -u was selected on the command line */
     gboolean adler = FALSE;        /** True if -a was selected on the command line */
+    gboolean stupid = FALSE;       /** True if -s was selected on the command line */
+
 
     GOptionEntry entries[] =
     {
-        { "version", 'v', 0, G_OPTION_ARG_NONE, &version, N_("Prints program version"), NULL },
-        { "adler", 'a', 0, G_OPTION_ARG_NONE, &adler, N_("Selects adler's librsync algorithm"), NULL },
-        { "adler-update", 'u', 0, G_OPTION_ARG_NONE, &adler_update, N_("Uses an update form of adler algorithm for librsync"), NULL},
+        { "version", 'v', 0, G_OPTION_ARG_NONE, &version, N_("Prints program version."), NULL },
+        { "adler", 'a', 0, G_OPTION_ARG_NONE, &adler, N_("Selects adler's librsync algorithm."), NULL },
+        { "stupid", 's', 0, G_OPTION_ARG_NONE, &stupid, N_("Selects a stupid algorithm to test it."), NULL },
+        { "adler-update", 'u', 0, G_OPTION_ARG_NONE, &adler_update, N_("Uses an update form of adler algorithm for librsync."), NULL},
         { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &dirname_array, "", NULL},
         { NULL }
     };
@@ -68,6 +71,8 @@ options_t *manage_command_line_options(int argc, char **argv)
     opt->version = version;           /* Only TRUE if -v or --version was invoked         */
     opt->adler_update = adler_update; /* Only TRUE if -u was selected on the command line */
     opt->adler = adler;               /* Only TRUE if -a was invoked on the command line  */
+    opt->stupid = stupid;             /* Only TRUE if -s was invoked on the command line  */
+
     opt->file_list = NULL;
     opt->file_list = convert_gchar_array_to_GSList(dirname_array, opt->file_list);
 

@@ -37,10 +37,11 @@
  */
 typedef struct
 {
-    gboolean version;      /**< TRUE if we have to display program's version                   */
-    gboolean adler_update; /**< TRUE to select the updating form of adler's librsync algorithm */
-    gboolean adler;        /**< TRUE to select adler's librsync algorithm                      */
-    GSList *file_list;     /**< list of files */
+    gboolean version;      /**< TRUE if we have to display program's version                       */
+    gboolean adler_update; /**< TRUE to select the updating form of adler's librsync algorithm     */
+    gboolean adler;        /**< TRUE to select adler's librsync algorithm                          */
+    gboolean stupid;       /**< TRUE to select a stupid algorithm to test it (this one may change) */
+    GSList *file_list;     /**< list of files                                                      */
 } options_t;
 
 
